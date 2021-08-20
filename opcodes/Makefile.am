@@ -51,7 +51,7 @@ libopcodes_la_LDFLAGS += -rpath $(rpath_bfdlibdir)
 endif
 
 # This is where bfd.h lives.
-BFD_H = ../bfd/bfd.h
+BFD_H = $(BFDDIR)/bfd.h
 
 BUILD_LIBS = @BUILD_LIBS@
 BUILD_LIB_DEPS = @BUILD_LIB_DEPS@
@@ -303,7 +303,7 @@ OFILES = @BFD_MACHINES@
 # development.sh is used to determine -Werror default.
 CONFIG_STATUS_DEPENDENCIES = $(BFDDIR)/development.sh
 
-AM_CPPFLAGS = -I. -I$(srcdir) -I../bfd -I$(INCDIR) -I$(BFDDIR) @HDEFINES@ @INCINTL@
+AM_CPPFLAGS = -I. -I$(srcdir) -I$(INCDIR) -I$(BFDDIR) @HDEFINES@ @INCINTL@
 
 disassemble.lo: disassemble.c
 if am__fastdepCC
@@ -324,11 +324,20 @@ libopcodes_la_SOURCES =  dis-buf.c disassemble.c dis-init.c
 # old version of libbfd, or to pick up libbfd for the wrong architecture
 # if host != build. So for building with shared libraries we use a
 # hardcoded path to libbfd.so instead of relying on the entries in libbfd.la.
-libopcodes_la_DEPENDENCIES = $(OFILES) @SHARED_DEPENDENCIES@
+libopcodes_la_DEPENDENCIES = $(OFILES) @SHARED_DEPENDENCIES@ libtool-soversion
 libopcodes_la_LIBADD = $(OFILES) @SHARED_LIBADD@
-libopcodes_la_LDFLAGS += -release `cat ../bfd/libtool-soversion` @SHARED_LDFLAGS@
+libopcodes_la_LDFLAGS += -release `cat libtool-soversion` @SHARED_LDFLAGS@
 # Allow dependency tracking to work on all the source files.
 EXTRA_libopcodes_la_SOURCES = $(LIBOPCODES_CFILES)
+
+libtool-soversion:
+	@echo "creating $@"
+	bfd_soversion="$(VERSION)" ;\
+	. $(BFDDIR)/development.sh ;\
+	if test "$$development" = true ; then \
+	  bfd_soversion="$(VERSION).$${bfd_version_date}" ;\
+	fi ;\
+	echo "$${bfd_soversion}" > $@
 
 # libtool will build .libs/libopcodes.a.  We create libopcodes.a in
 # the build directory so that we don't have to convert all the

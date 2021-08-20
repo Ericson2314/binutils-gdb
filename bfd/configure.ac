@@ -292,30 +292,16 @@ AC_CACHE_CHECK(linker --as-needed support, bfd_cv_ld_as_needed,
 
 LT_LIB_M
 
-# When building a shared libbfd, link against the pic version of libiberty
-# so that apps that use libbfd won't need libiberty just to satisfy any
-# libbfd references.
-# We can't do that if a pic libiberty is unavailable since including non-pic
-# code would insert text relocations into libbfd.
 SHARED_LIBADD=
-SHARED_LDFLAGS=
+SHARED_LDFLAGS=-liberty
 if test "$enable_shared" = "yes"; then
-changequote(,)dnl
-  x=`sed -n -e 's/^[ 	]*PICFLAG[ 	]*=[ 	]*//p' < ../libiberty/Makefile | sed -n '$p'`
-changequote([,])dnl
-  if test -n "$x"; then
-    SHARED_LIBADD="-L`pwd`/../libiberty/pic -liberty"
-  fi
-fi
-
 SHARED_LIBADD="$SHARED_LIBADD $LIBINTL"
 
-if test "$enable_shared" = "yes"; then
   case "${host}" in
   # More hacks to build DLLs on Windows.
   *-*-cygwin*)
     SHARED_LDFLAGS="-no-undefined"
-    SHARED_LIBADD="-L`pwd`/../libiberty -liberty $SHARED_LIBADD -lcygwin -lkernel32"
+    SHARED_LIBADD="-liberty $SHARED_LIBADD -lcygwin -lkernel32"
   ;;
   esac
 
