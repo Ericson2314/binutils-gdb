@@ -86,6 +86,7 @@ AC_PROG_INSTALL
 
 AC_CHECK_HEADERS(string.h strings.h stdlib.h limits.h)
 ACX_HEADER_STRING
+GCC_HEADER_STDINT(bfd_stdint.h)
 
 AC_CHECK_DECLS([basename, stpcpy])
 
@@ -137,61 +138,27 @@ AC_CACHE_CHECK(linker --as-needed support, bfd_cv_ld_as_needed,
 
 LT_LIB_M
 
-#Libs for generator progs
-if test "x$cross_compiling" = "xno"; then
-  BUILD_LIBS=../libiberty/libiberty.a
-  BUILD_LIB_DEPS=$BUILD_LIBS
-else
-  # if cross-compiling, assume that the system provides -liberty
-  # and that the version is compatible with new headers.
-  BUILD_LIBS=-liberty
-  BUILD_LIB_DEPS=
-fi
-BUILD_LIBS="$BUILD_LIBS $LIBINTL"
-BUILD_LIB_DEPS="$BUILD_LIB_DEPS $LIBINTL_DEP"
+BUILD_LIBS="-liberty $LIBINTL"
+BUILD_LIB_DEPS="$LIBINTL_DEP"
 
 AC_SUBST(BUILD_LIBS)
 AC_SUBST(BUILD_LIB_DEPS)
 
 # Horrible hacks to build DLLs on Windows and a shared library elsewhere.
 SHARED_LDFLAGS=
-SHARED_LIBADD=
+SHARED_LIBADD=-liberty
 SHARED_DEPENDENCIES=
 if test "$enable_shared" = "yes"; then
-# When building a shared libopcodes, link against the pic version of libiberty
-# so that apps that use libopcodes won't need libiberty just to satisfy any
-# libopcodes references.
-# We can't do that if a pic libiberty is unavailable since including non-pic
-# code would insert text relocations into libopcodes.
 # Note that linking against libbfd as we do here, which is itself linked
 # against libiberty, may not satisfy all the libopcodes libiberty references
 # since libbfd may not pull in the entirety of libiberty.
-changequote(,)dnl
-  x=`sed -n -e 's/^[ 	]*PICFLAG[ 	]*=[ 	]*//p' < ../libiberty/Makefile | sed -n '$p'`
-changequote([,])dnl
-  if test -n "$x"; then
-    SHARED_LIBADD="-L`pwd`/../libiberty/pic -liberty"
-  fi
-
   case "${host}" in
     *-*-cygwin*)
       SHARED_LDFLAGS="-no-undefined"
-      SHARED_LIBADD="-L`pwd`/../bfd -lbfd -L`pwd`/../libiberty -liberty -L`pwd`/../intl -lintl -lcygwin"
+      SHARED_LIBADD="-lbfd -liberty -lintl -lcygwin"
       ;;
-   *-*-darwin*)
-     SHARED_LIBADD="-Wl,`pwd`/../bfd/.libs/libbfd.dylib ${SHARED_LIBADD}"
-     SHARED_DEPENDENCIES="../bfd/libbfd.la"
-     ;;
     *)
-      case "$host_vendor" in
-        hp)
-          SHARED_LIBADD="-Wl,`pwd`/../bfd/.libs/libbfd.sl ${SHARED_LIBADD}"
-	  ;;
-	*)
-          SHARED_LIBADD="-Wl,`pwd`/../bfd/.libs/libbfd.so ${SHARED_LIBADD}"
-	  ;;
-      esac
-      SHARED_DEPENDENCIES="../bfd/libbfd.la"
+      SHARED_LIBADD="-lbfd ${SHARED_LIBADD}"
       ;;
   esac
 
